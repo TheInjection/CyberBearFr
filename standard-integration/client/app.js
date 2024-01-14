@@ -18,9 +18,9 @@ window.paypal
             ],
           }),
         });
-
+        
         const orderData = await response.json();
-
+        
         if (orderData.id) {
           return orderData.id;
         } else {
@@ -28,7 +28,7 @@ window.paypal
           const errorMessage = errorDetail
             ? `${errorDetail.issue} ${errorDetail.description} (${orderData.debug_id})`
             : JSON.stringify(orderData);
-
+        
           throw new Error(errorMessage);
         }
       } catch (error) {
@@ -44,14 +44,14 @@ window.paypal
             "Content-Type": "application/json",
           },
         });
-
+      
         const orderData = await response.json();
         // Three cases to handle:
         //   (1) Recoverable INSTRUMENT_DECLINED -> call actions.restart()
         //   (2) Other non-recoverable errors -> Show a failure message
         //   (3) Successful transaction -> Show confirmation or thank you message
-
         const errorDetail = orderData?.details?.[0];
+
 
         if (errorDetail?.issue === "INSTRUMENT_DECLINED") {
           // (1) Recoverable INSTRUMENT_DECLINED -> call actions.restart()
@@ -65,9 +65,11 @@ window.paypal
         } else {
           // (3) Successful transaction -> Show confirmation or thank you message
           // Or go to another URL:  actions.redirect('thank_you.html');
-          alert('L\'accès au site est : https://deluxe-art-c70.notion.site/Hacking-Tips-a72e96258b8e4785898fc1a0131a14ab?pvs=4')
+          const transaction =
+            orderData?.purchase_units?.[0]?.payments?.captures?.[0] ||
+            orderData?.purchase_units?.[0]?.payments?.authorizations?.[0];
           resultMessage(
-            `Transaction terminée merci pour votre confiance le lien d'accès est : https://deluxe-art-c70.notion.site/Hacking-Tips-a72e96258b8e4785898fc1a0131a14ab?pvs=4`,
+            `Transaction ${transaction.status}: ${transaction.id}<br><br>See console for all available details`,
           );
           console.log(
             "Capture result",
@@ -84,7 +86,6 @@ window.paypal
     },
   })
   .render("#paypal-button-container");
-
 // Example function to show a result to the user. Your site's UI library can be used instead.
 function resultMessage(message) {
   const container = document.querySelector("#result-message");
